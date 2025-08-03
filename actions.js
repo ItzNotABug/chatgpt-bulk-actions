@@ -418,8 +418,8 @@ function addCheckboxesToConversations() {
         const convoId = link.getAttribute('href').match(/\/c\/(.+)/)?.[1];
         if (!convoId) return;
 
-      const content = link.querySelector('div.flex.min-w-0.grow.items-center.gap-2\\.5');
-      if (!content || content.querySelector('.conversation-checkbox')) return;
+        const content = link.querySelector('div.flex.min-w-0.grow.items-center.gap-2\\.5');
+        if (!content || content.querySelector('.conversation-checkbox')) return;
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
