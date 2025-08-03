@@ -18,7 +18,7 @@ function waitForElement(selector, callback) {
 
 function observeSidebarMount() {
     const observer = new MutationObserver(() => {
-        const sidebar = document.querySelector('#stage-slideover-sidebar');
+        const sidebar = document.querySelector('#history');
         const h2 = sidebar?.querySelector('aside h2');
         const alreadyInjected = sidebar?.querySelector('.bulk-menu-btn');
         if (sidebar && h2 && !alreadyInjected) {
@@ -418,7 +418,7 @@ function addCheckboxesToConversations() {
         const convoId = link.getAttribute('href').match(/\/c\/(.+)/)?.[1];
         if (!convoId) return;
 
-        const content = link.querySelector('div.flex.min-w-0.grow.items-center.gap-2');
+        const content = link.querySelector('div.flex.min-w-0.grow.items-center.gap-2\\.5');
         if (!content || content.querySelector('.conversation-checkbox')) return;
 
         const checkbox = document.createElement('input');
