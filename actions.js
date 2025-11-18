@@ -18,10 +18,10 @@ function waitForElement(selector, callback) {
 
 function observeSidebarMount() {
     const observer = new MutationObserver(() => {
-        const sidebar = document.querySelector('#history');
-        const h2 = sidebar?.querySelector('aside h2');
-        const alreadyInjected = sidebar?.querySelector('.bulk-menu-btn');
-        if (sidebar && h2 && !alreadyInjected) {
+        const historySection = document.querySelector('#history');
+        const headerSection = historySection?.previousElementSibling;
+        const alreadyInjected = headerSection?.querySelector('.bulk-menu-btn');
+        if (historySection && headerSection && !alreadyInjected) {
             createBulkActionsUI();
         }
     });
@@ -272,23 +272,26 @@ function injectStyles() {
 }
 
 function createBulkActionsUI() {
-    const aside = document.querySelector('#history aside');
-    const h2 = aside?.querySelector('h2');
-    if (!aside || !h2) return;
+    const historySection = document.querySelector('#history');
+    const headerSection = historySection?.previousElementSibling;
+    const h2 = headerSection?.querySelector('h2');
+    if (!historySection || !headerSection || !h2) return;
 
-    if (aside.querySelector('#headerWrapper')) return;
+    // check if already injected
+    if (headerSection.querySelector('.bulk-menu-btn')) return;
 
-    let headerWrapper = h2.parentElement;
-    if (!headerWrapper.classList.contains('flex')) {
-        headerWrapper = document.createElement('div');
-        headerWrapper.id = "headerWrapper";
-        headerWrapper.className = 'flex items-center justify-between';
-        h2.parentElement.insertBefore(headerWrapper, h2);
-        headerWrapper.appendChild(h2);
+    // the h2's parent is the flex container we want to inject into
+    const headerContainer = h2.parentElement;
+    if (!headerContainer) return;
+
+    // ensure it has the right structure (flex layout)
+    if (!headerContainer.classList.contains('flex')) {
+        headerContainer.classList.add('flex', 'items-center', 'w-full');
     }
 
     const actionContainer = document.createElement('div');
     actionContainer.className = 'flex items-center';
+    actionContainer.style.marginLeft = 'auto';
 
     const selectionCount = document.createElement('span');
     selectionCount.className = 'selection-count';
@@ -317,7 +320,6 @@ function createBulkActionsUI() {
     const menuButton = document.createElement('button');
     menuButton.title = 'Bulk actions';
     menuButton.className = 'bulk-menu-btn';
-    menuButton.style.marginInlineEnd = '1rem';
     menuButton.innerHTML = `
         <svg class="dots-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 128 512">
             <path d="M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z"/>
@@ -331,7 +333,17 @@ function createBulkActionsUI() {
     actionContainer.appendChild(selectionCount);
     actionContainer.appendChild(selectionActions);
     actionContainer.appendChild(menuButton);
-    headerWrapper.appendChild(actionContainer);
+    headerContainer.appendChild(actionContainer);
+
+    // hide the collapse/expand SVG to prevent shifts
+    const collapseSvg = headerContainer.querySelector('svg');
+    if (collapseSvg) {
+        collapseSvg.style.display = 'none';
+    }
+
+    // stop propagation to prevent collapse/expand
+    const stopPropagation = (e) => e.stopPropagation();
+    actionContainer.addEventListener('click', stopPropagation);
 
     menuButton.addEventListener('click', toggleSelectionMode);
     selectionActions.querySelector('.select-all').addEventListener('click', toggleSelectAll);
@@ -349,7 +361,7 @@ function toggleSelectionMode() {
     const actions = document.querySelector('.selection-actions');
     const countEl = document.querySelector('.selection-count');
 
-    const trailingButtons = document.querySelectorAll('.trailing.highlight');
+    const trailingButtons = document.querySelectorAll('#history .trailing.highlight');
 
     if (isSelectionMode) {
         menuBtn.classList.add('selection-mode-active');
@@ -414,11 +426,11 @@ function resetSelectionStatus() {
 // DOM Injection Logic
 // =========================
 function addCheckboxesToConversations() {
-    document.querySelectorAll('#history a[href^="/c/"]').forEach(link => {
+    document.querySelectorAll('#history a.group[href^="/c/"]').forEach(link => {
         const convoId = link.getAttribute('href').match(/\/c\/(.+)/)?.[1];
         if (!convoId) return;
 
-        const content = link.querySelector('div.flex.min-w-0.grow.items-center.gap-2\\.5');
+        const content = link.querySelector('div.flex.min-w-0.grow.items-center');
         if (!content || content.querySelector('.conversation-checkbox')) return;
 
         const checkbox = document.createElement('input');
@@ -522,7 +534,7 @@ function archiveSelected() {
 // =========================
 window.addEventListener('load', () => {
     injectStyles();
-    waitForElement('#history aside h2', createBulkActionsUI);
+    waitForElement('#history', createBulkActionsUI);
     observeSidebarMount();
 });
 
